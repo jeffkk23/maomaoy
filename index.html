@@ -75,19 +75,6 @@ textarea.ifl{resize:none;line-height:1.6}
 .pbtn:disabled{opacity:.5;pointer-events:none}
 .ba{padding:16px 20px calc(16px + var(--sab));flex-shrink:0}
 
-/* ── 关怀弹窗 ── */
-.care-bg{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:flex;align-items:flex-end;opacity:0;transition:opacity .3s;pointer-events:none}
-.care-bg.show{opacity:1;pointer-events:all}
-.care-sheet{background:var(--card);border-radius:28px 28px 0 0;padding:28px 24px calc(38px + var(--sab));width:100%;transform:translateY(100%);transition:transform .4s cubic-bezier(.34,1,.64,1)}
-.care-bg.show .care-sheet{transform:translateY(0)}
-.care-dog{font-size:52px;text-align:center;margin-bottom:14px;animation:wag .8s ease-in-out 1s both}
-@keyframes wag{0%,100%{transform:rotate(0)}25%{transform:rotate(-10deg)}75%{transform:rotate(10deg)}}
-.care-title{font-size:20px;font-weight:800;color:var(--t);text-align:center;margin-bottom:8px}
-.care-msg{font-size:14px;color:var(--t2);text-align:center;line-height:1.75;margin-bottom:22px}
-.care-msg strong{color:var(--t)}
-.care-tag{display:inline-block;background:var(--pl);color:var(--p);font-size:12px;font-weight:700;padding:2px 8px;border-radius:6px}
-.care-p{width:100%;padding:15px;border-radius:16px;border:none;background:linear-gradient(135deg,#FF6B35,#FF4500);color:white;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:10px}
-.care-s{width:100%;padding:13px;border-radius:16px;border:1.5px solid var(--bd);background:transparent;color:var(--t2);font-size:14px;cursor:pointer;font-family:inherit}
 
 /* ── Screen 0: Splash ── */
 #s0{background:linear-gradient(180deg,#FFF3EE 0%,#FFF8F3 60%,var(--bg) 100%);justify-content:space-between;padding-bottom:calc(20px + var(--sab))}
@@ -180,6 +167,10 @@ textarea.ifl{resize:none;line-height:1.6}
 .rb-g{background:var(--gl);color:var(--g)}
 .rb-y{background:#FFF8E1;color:#D97706}
 .rb-r{background:#FFF0EE;color:var(--p)}
+
+/* ── 回主页按钮 ── */
+.home-btn{width:36px;height:36px;border-radius:50%;background:var(--card);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;box-shadow:0 1px 6px rgba(0,0,0,.08);margin-left:auto;flex-shrink:0}
+.home-btn:active{background:var(--pl)}
 
 /* ── 编辑档案按钮 ── */
 .reset-btn{display:block;margin:10px auto 20px;padding:10px 24px;border:1.5px solid var(--bd);border-radius:14px;background:transparent;color:var(--t3);font-size:13px;cursor:pointer;font-family:inherit}
@@ -489,6 +480,7 @@ textarea.ifl{resize:none;line-height:1.6}
       <button class="bk" onclick="goBack()" style="flex-shrink:0">←</button>
       <div class="c-ava">🐾</div>
       <div class="c-info"><h3 id="s5title">毛毛医</h3><p id="s5sub">在线</p></div>
+      <button class="home-btn" onclick="goHome()" title="回主页">🏠</button>
     </div>
     <div class="chatbox" id="cb"><div class="tlbl" id="cbTime"></div></div>
     <div class="cinput-bar">
@@ -503,6 +495,7 @@ textarea.ifl{resize:none;line-height:1.6}
       <button class="bk" onclick="goBack()" style="flex-shrink:0">←</button>
       <div class="c-ava">🌟</div>
       <div class="c-info"><h3 id="s6title">今日心情</h3><p>每日情绪追踪</p></div>
+      <button class="home-btn" onclick="goHome()" title="回主页">🏠</button>
     </div>
     <div class="chatbox" id="cb2"><div class="tlbl" id="cb2Time"></div></div>
     <div class="cinput-bar">
@@ -511,18 +504,6 @@ textarea.ifl{resize:none;line-height:1.6}
     </div>
   </div>
 
-  <!-- 关怀弹窗 -->
-  <div class="care-bg" id="careBg" onclick="closeCare(true)">
-    <div class="care-sheet" onclick="event.stopPropagation()">
-      <div class="care-dog" id="careEmoji">🐶</div>
-      <div class="care-title" id="careTitle">最近还好吗？</div>
-      <div class="care-msg" id="careMsg"></div>
-      <div class="care-btns">
-        <button class="care-p" onclick="closeCare(false)">📷 拍一张照片给你看</button>
-        <button class="care-s" onclick="closeCare(true)">今天一切正常，谢谢关心</button>
-      </div>
-    </div>
-  </div>
 
 </div><!-- /app -->
 
@@ -551,16 +532,14 @@ const PET_META = {
     ageLabels:['幼猫','成年猫','老年猫'],
     sizes:['小型猫（4kg以下）','中型猫（4-6kg）','大型猫（6kg以上）'],
     dietPlaceholder:'例：皇家室内猫粮',
-    healthTip:'老年猫建议每半年一次',
-    careEmoji:'🐱'
+    healthTip:'老年猫建议每半年一次'
   },
   dog: {
     emoji:'🐕', label:'狗',
     ageLabels:['幼犬','成年犬','老年犬'],
     sizes:['小型犬（10kg以下）','中型犬（10-25kg）','大型犬（25kg以上）'],
     dietPlaceholder:'例：皇家小型犬粮',
-    healthTip:'老年犬建议每半年一次',
-    careEmoji:'🐶'
+    healthTip:'老年犬建议每半年一次'
   }
 };
 function getAgeLabel(p){
@@ -884,7 +863,7 @@ function deletePet(idx){
   localStorage.setItem('mmy_active',String(active));
   onEnterS4();
 }
-function clearPet(){localStorage.removeItem('mmy_pet');localStorage.removeItem('mmy_pets');localStorage.removeItem('mmy_active');localStorage.removeItem('mmy_care_shown');if(!isGuest&&isBackendReady())apiCall('/api/pet','DELETE')}
+function clearPet(){localStorage.removeItem('mmy_pet');localStorage.removeItem('mmy_pets');localStorage.removeItem('mmy_active');if(!isGuest&&isBackendReady())apiCall('/api/pet','DELETE')}
 
 // ── 健康日历跳过 ──
 function toggleHcSkip(id,el){
@@ -973,6 +952,16 @@ function goBack(){
     cEl.style.transition='';
   },350);
   pEl.classList.add('active');
+}
+
+function goHome(){
+  chatRunning=false;
+  // 关闭所有屏幕，直接回到S4
+  document.querySelectorAll('.sc').forEach(s=>{s.classList.remove('active','out');s.style.transform='';s.style.transition=''});
+  screenStack=['s4'];
+  $('s4').classList.add('active');
+  history.replaceState({screen:'s4'},'');
+  onEnterS4();
 }
 
 // History popstate
@@ -1207,8 +1196,6 @@ function onEnterS4(){
     ${!isGuest&&currentUser?`<div class="user-badge">${currentUser.email}</div><button class="logout-btn" onclick="doLogout()">退出登录</button>`:''}
   `;
 
-  // 关怀弹窗
-  showCare();
 }
 
 // ── 健康提醒构建 ──
@@ -1258,30 +1245,6 @@ function calcUrgency(val, cycle){
     return {color:'var(--p)',next:`${daysLeft}天后到期`,label:'⚡ 即将到期',cls:'rb-r'};
   }
   return {color:'var(--p)',next:`已超期${Math.abs(daysLeft)}天`,label:'⚡ 已超期',cls:'rb-r'};
-}
-
-// ── 关怀弹窗 ──
-function showCare(){
-  const p=getPet();
-  if(!p) return;
-  // 第一次建档不弹关怀，只在后续进入S4时弹出
-  if(!localStorage.getItem('mmy_care_shown')){
-    localStorage.setItem('mmy_care_shown','1');
-    return;
-  }
-  const pronoun=p.gender==='母 ♀'?'她':'他';
-  $('careEmoji').textContent=getMeta(p).careEmoji;
-  $('careTitle').textContent=`${p.name}，最近还好吗？`;
-  $('careMsg').innerHTML=`
-    上次你问过${p.name}<strong>不吃东西</strong>的问题，<br>
-    ${pronoun}现在好了吗？<br><br>
-    拍一张照片发给我，<span class="care-tag">30秒</span>帮你看看状态
-  `;
-  setTimeout(()=>$('careBg').classList.add('show'),1500);
-}
-function closeCare(normal){
-  $('careBg').classList.remove('show');
-  if(!normal) setTimeout(()=>goToMood(),300);
 }
 
 // ── 重新建档 ──
