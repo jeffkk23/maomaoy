@@ -16,6 +16,7 @@
 <meta name="x5-orientation" content="portrait">
 <meta name="screen-orientation" content="portrait">
 <title>毛毛医 · 懂你毛孩的那位医生</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 :root{
@@ -101,14 +102,18 @@ textarea.ifl{resize:none;line-height:1.6}
 .ft h4{font-size:14px;font-weight:600;color:var(--t);margin-bottom:2px}
 .ft p{font-size:12px;color:var(--t2)}
 
-/* ── Screen 1: Pet type ── */
-.pgrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;padding:8px 0 20px}
-.pc{background:var(--card);border:2px solid var(--bd);border-radius:18px;padding:18px 10px;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;transition:all .2s}
-.pc:active{transform:scale(.95)}
-.pc.s{border-color:var(--p);background:var(--pl)}
-.pc .pe{font-size:36px}
-.pc .pn{font-size:13px;font-weight:600;color:var(--t2)}
-.pc.s .pn{color:var(--p)}
+/* ── Screen 1: Pet type (big cards) ── */
+.pet-pick{flex:1;display:flex;flex-direction:column;gap:16px;padding:8px 20px 0}
+.pet-big{flex:1;border-radius:28px;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  cursor:pointer;border:3px solid var(--bd);transition:all .25s;background:linear-gradient(160deg,#FFF8F0,#FFF3EE);position:relative}
+.pet-big.s{border-color:var(--p);background:linear-gradient(160deg,#FFF0E8,#FFE8D6)}
+.pet-big:active{transform:scale(.97)}
+.pet-big .pb-emoji{font-size:80px;margin-bottom:8px}
+.pet-big .pb-name{font-size:22px;font-weight:800;color:var(--t)}
+.pet-big .pb-desc{font-size:13px;color:var(--t2);margin-top:4px}
+.pet-big.s .pb-name{color:var(--p)}
+.pet-big.s::after{content:'✓';position:absolute;top:16px;right:18px;width:28px;height:28px;border-radius:50%;
+  background:var(--p);color:white;font-size:14px;display:flex;align-items:center;justify-content:center}
 
 /* ── 健康日历 ── */
 .hc-grid{display:flex;flex-direction:column;gap:10px;margin-bottom:8px}
@@ -117,8 +122,14 @@ textarea.ifl{resize:none;line-height:1.6}
 .hc-info{flex:1}
 .hc-name{font-size:14px;font-weight:600;color:var(--t)}
 .hc-sub{font-size:12px;color:var(--t3);margin-top:2px}
-.hc-sel{padding:6px 10px;border-radius:10px;border:1.5px solid var(--bd);font-size:13px;color:var(--t);background:var(--bg);font-family:inherit;outline:none;cursor:pointer;max-width:110px;-webkit-appearance:none;appearance:none}
+.hc-sel{padding:6px 10px;border-radius:10px;border:1.5px solid var(--bd);font-size:13px;color:var(--t);background:var(--bg);font-family:inherit;outline:none;cursor:pointer;max-width:130px;-webkit-appearance:none;appearance:none}
 .hc-sel:focus{border-color:var(--p)}
+.hc-date{padding:6px 10px;border-radius:10px;border:1.5px solid var(--bd);font-size:13px;color:var(--t);background:var(--bg);font-family:inherit;outline:none;max-width:130px;-webkit-appearance:none;appearance:none}
+.hc-date:focus{border-color:var(--p)}
+.hc-date:disabled{opacity:.4;background:var(--bd)}
+.hc-skip{font-size:11px;color:var(--t3);cursor:pointer;margin-top:3px;text-align:right}
+.hc-skip.skipped{color:var(--p);font-weight:600}
+.hc-right{display:flex;flex-direction:column;align-items:flex-end;flex-shrink:0}
 
 /* ── Photo upload (onboarding) ── */
 .pz{background:var(--card);border:2px dashed var(--bd);border-radius:24px;height:220px;margin-bottom:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;cursor:pointer;transition:all .3s;overflow:hidden;position:relative}
@@ -170,9 +181,17 @@ textarea.ifl{resize:none;line-height:1.6}
 .rb-y{background:#FFF8E1;color:#D97706}
 .rb-r{background:#FFF0EE;color:var(--p)}
 
-/* ── 重新建档按钮 ── */
+/* ── 编辑档案按钮 ── */
 .reset-btn{display:block;margin:10px auto 20px;padding:10px 24px;border:1.5px solid var(--bd);border-radius:14px;background:transparent;color:var(--t3);font-size:13px;cursor:pointer;font-family:inherit}
 .reset-btn:active{background:var(--pl);border-color:var(--p);color:var(--p)}
+
+/* ── 多宠物切换栏 ── */
+.pet-tabs{display:flex;gap:8px;padding:8px 0 4px;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.pet-tabs::-webkit-scrollbar{display:none}
+.pet-tab{padding:8px 16px;border-radius:20px;background:var(--card);border:1.5px solid var(--bd);
+  font-size:13px;font-weight:600;white-space:nowrap;cursor:pointer;flex-shrink:0}
+.pet-tab.active{background:var(--p);color:white;border-color:var(--p)}
+.pet-tab-add{background:var(--pl);border:1.5px dashed var(--pm);color:var(--p)}
 
 /* ── Chat ── */
 #s5{background:#F2EFE9}
@@ -259,6 +278,18 @@ textarea.ifl{resize:none;line-height:1.6}
 /* hidden file input */
 .hidden-input{position:absolute;width:0;height:0;overflow:hidden;opacity:0}
 
+/* ── Login Screen ── */
+#sLogin{background:linear-gradient(180deg,#FFF3EE 0%,#FFF8F3 60%,var(--bg) 100%);justify-content:center;align-items:center;padding:20px calc(20px + var(--sal)) calc(20px + var(--sab)) calc(20px + var(--sar))}
+.login-wrap{width:100%;max-width:340px;display:flex;flex-direction:column;align-items:center}
+.login-card{background:var(--card);border-radius:24px;padding:28px 24px;box-shadow:var(--sh);width:100%}
+.login-title{font-size:20px;font-weight:800;color:var(--t);text-align:center;margin-bottom:20px}
+.login-err{font-size:13px;color:#e53e3e;text-align:center;min-height:20px;margin-bottom:8px;line-height:1.4}
+.login-link{text-align:center;margin-top:14px;font-size:13px;color:var(--p);cursor:pointer;font-weight:500}
+.login-skip{text-align:center;margin-top:16px;font-size:13px;color:var(--t3);cursor:pointer;text-decoration:underline}
+.logout-btn{display:block;margin:6px auto 20px;padding:10px 24px;border:1.5px solid var(--pm);border-radius:14px;background:transparent;color:var(--p);font-size:13px;cursor:pointer;font-family:inherit}
+.logout-btn:active{background:var(--pl)}
+.user-badge{text-align:center;font-size:12px;color:var(--t3);margin-bottom:6px}
+
 /* ── report uploaded preview ── */
 .rec-prev{display:none;margin-top:10px;background:var(--card);border-radius:12px;padding:12px 14px;border:1px solid var(--bd);gap:10px;align-items:center}
 .rec-prev.show{display:flex}
@@ -275,8 +306,26 @@ textarea.ifl{resize:none;line-height:1.6}
 
 <div id="app">
 
+  <!-- ══ S-Login: 登录页 ══ -->
+  <div class="sc" id="sLogin">
+    <div class="login-wrap">
+      <div class="app-icon" style="animation:pop .6s cubic-bezier(.34,1.56,.64,1) both">🐾</div>
+      <div class="app-nm">毛毛医</div>
+      <div class="app-tg" style="margin-bottom:28px">懂你毛孩的那位医生</div>
+      <div class="login-card">
+        <div class="login-title" id="authTitle">登录</div>
+        <div class="ig"><label class="il">邮箱</label><input class="ifl" id="authEmail" type="email" placeholder="your@email.com" autocomplete="email"></div>
+        <div class="ig"><label class="il">密码</label><input class="ifl" id="authPwd" type="password" placeholder="至少6位" autocomplete="current-password"></div>
+        <div class="login-err" id="authErr"></div>
+        <button class="pbtn" id="authBtn" onclick="doAuth()">登录</button>
+        <div class="login-link" id="authToggle" onclick="toggleAuth()">还没有账号？注册一个</div>
+        <div class="login-skip" onclick="skipLogin()">先体验一下，不登录</div>
+      </div>
+    </div>
+  </div>
+
   <!-- ══ S0: 欢迎页 ══ -->
-  <div class="sc active" id="s0">
+  <div class="sc" id="s0">
     <div class="spl-top">
       <div class="app-icon">🐾</div>
       <div class="app-nm">毛毛医</div>
@@ -295,15 +344,16 @@ textarea.ifl{resize:none;line-height:1.6}
   <!-- ══ S1: 宠物类型 ══ -->
   <div class="sc" id="s1">
     <div class="topbar"><button class="bk" onclick="goBack()">←</button><span class="ttl">选择宠物类型</span></div>
-    <div class="sb-body">
-      <div style="padding:4px 0 16px"><div style="font-size:20px;font-weight:700;color:var(--t)">你的毛孩是？</div><div style="font-size:13px;color:var(--t2);margin-top:4px">选择后我们提供更精准的服务</div></div>
-      <div class="pgrid" id="petTypeGrid">
-        <div class="pc s" data-type="dog" data-emoji="🐕" onclick="selP(this)"><span class="pe">🐕</span><span class="pn">狗</span></div>
-        <div class="pc" data-type="cat" data-emoji="🐱" onclick="selP(this)"><span class="pe">🐱</span><span class="pn">猫</span></div>
-        <div class="pc" data-type="rabbit" data-emoji="🐰" onclick="selP(this)"><span class="pe">🐰</span><span class="pn">兔子</span></div>
-        <div class="pc" data-type="hamster" data-emoji="🐹" onclick="selP(this)"><span class="pe">🐹</span><span class="pn">仓鼠</span></div>
-        <div class="pc" data-type="bird" data-emoji="🦜" onclick="selP(this)"><span class="pe">🦜</span><span class="pn">鸟</span></div>
-        <div class="pc" data-type="other" data-emoji="🐾" onclick="selP(this)"><span class="pe">🐾</span><span class="pn">其他</span></div>
+    <div class="pet-pick" id="petTypeGrid">
+      <div class="pet-big s" data-type="cat" data-emoji="🐱" onclick="selP(this)">
+        <span class="pb-emoji">🐱</span>
+        <span class="pb-name">猫咪</span>
+        <span class="pb-desc">独立又温柔的小主子</span>
+      </div>
+      <div class="pet-big" data-type="dog" data-emoji="🐕" onclick="selP(this)">
+        <span class="pb-emoji">🐶</span>
+        <span class="pb-name">狗狗</span>
+        <span class="pb-desc">忠诚又热情的好伙伴</span>
       </div>
     </div>
     <div class="ba"><button class="pbtn" onclick="goTo('s2')">下一步</button></div>
@@ -328,11 +378,15 @@ textarea.ifl{resize:none;line-height:1.6}
         <div class="ig" style="flex:1.5">
           <label class="il">体型</label>
           <select class="ifl" id="fSize">
-            <option value="小型犬（10kg以下）">小型犬（10kg以下）</option>
-            <option value="中型犬">中型犬</option>
-            <option value="大型犬">大型犬</option>
+            <option value="小型猫（4kg以下）">小型猫（4kg以下）</option>
+            <option value="中型猫（4-6kg）">中型猫（4-6kg）</option>
+            <option value="大型猫（6kg以上）">大型猫（6kg以上）</option>
           </select>
         </div>
+      </div>
+      <div class="ig">
+        <label class="il">生日（选填）</label>
+        <input class="ifl" id="fBirthday" type="date">
       </div>
       <div class="ig">
         <label class="il">性别</label>
@@ -342,8 +396,8 @@ textarea.ifl{resize:none;line-height:1.6}
         </div>
       </div>
       <div class="ig">
-        <label class="il">品种</label>
-        <input class="ifl" id="fBreed" type="text" placeholder="不确定可填混血">
+        <label class="il">品种（选填）</label>
+        <input class="ifl" id="fBreed" type="text" placeholder="不确定可不填">
       </div>
       <div class="ig">
         <label class="il">是否绝育？</label>
@@ -367,7 +421,7 @@ textarea.ifl{resize:none;line-height:1.6}
       </div>
       <div class="ig">
         <label class="il">平时吃什么？</label>
-        <input class="ifl" id="fDiet" type="text" placeholder="例：皇家老年犬粮">
+        <input class="ifl" id="fDiet" type="text" placeholder="例：皇家室内猫粮">
       </div>
       <div class="ig">
         <label class="il">上传体检报告（可选）</label>
@@ -389,11 +443,11 @@ textarea.ifl{resize:none;line-height:1.6}
     <div class="sb-body">
       <div style="padding:4px 0 14px"><div style="font-size:15px;font-weight:700;color:var(--t)">上次护理时间</div><div style="font-size:13px;color:var(--t2);margin-top:4px;line-height:1.6">填写后我会在合适的时候提醒你，<br>不用自己记了</div></div>
       <div class="hc-grid">
-        <div class="hc"><span class="hc-ico">💉</span><div class="hc-info"><div class="hc-name">驱虫（体内+体外）</div><div class="hc-sub">建议每1-3个月一次</div></div><select class="hc-sel" id="hc1"><option value="2个月前">2个月前</option><option value="1个月前" selected>1个月前</option><option value="2周前">2周前</option><option value="本月">本月</option></select></div>
-        <div class="hc"><span class="hc-ico">🦷</span><div class="hc-info"><div class="hc-name">洁牙</div><div class="hc-sub">建议每6-12个月一次</div></div><select class="hc-sel" id="hc2"><option value="1年前">1年前</option><option value="8个月前" selected>8个月前</option><option value="半年前">半年前</option><option value="3个月前">3个月前</option></select></div>
-        <div class="hc"><span class="hc-ico">🩺</span><div class="hc-info"><div class="hc-name">年度体检</div><div class="hc-sub">老年犬建议每半年一次</div></div><select class="hc-sel" id="hc3"><option value="4个月前" selected>4个月前</option><option value="半年前">半年前</option><option value="1年前">1年前</option><option value="本月">本月</option></select></div>
-        <div class="hc"><span class="hc-ico">✂️</span><div class="hc-info"><div class="hc-name">美容 / 洗澡</div><div class="hc-sub">建议每1-2个月一次</div></div><select class="hc-sel" id="hc4"><option value="本月">本月</option><option value="3周前" selected>3周前</option><option value="1个月前">1个月前</option><option value="2个月前">2个月前</option></select></div>
-        <div class="hc"><span class="hc-ico">💊</span><div class="hc-info"><div class="hc-name">年度疫苗</div><div class="hc-sub">建议每年接种</div></div><select class="hc-sel" id="hc5"><option value="2个月前" selected>2个月前</option><option value="半年前">半年前</option><option value="1年前">1年前</option><option value="本月">本月</option></select></div>
+        <div class="hc"><span class="hc-ico">💉</span><div class="hc-info"><div class="hc-name">驱虫（体内+体外）</div><div class="hc-sub">建议每1-3个月一次</div></div><div class="hc-right"><input type="date" class="hc-date" id="hc1"><div class="hc-skip" onclick="toggleHcSkip('hc1',this)">不记得</div></div></div>
+        <div class="hc"><span class="hc-ico">🦷</span><div class="hc-info"><div class="hc-name">洁牙</div><div class="hc-sub">建议每6-12个月一次</div></div><div class="hc-right"><input type="date" class="hc-date" id="hc2"><div class="hc-skip" onclick="toggleHcSkip('hc2',this)">不记得</div></div></div>
+        <div class="hc"><span class="hc-ico">🩺</span><div class="hc-info"><div class="hc-name">年度体检</div><div class="hc-sub" id="hcCheckupTip">老年猫建议每半年一次</div></div><div class="hc-right"><input type="date" class="hc-date" id="hc3"><div class="hc-skip" onclick="toggleHcSkip('hc3',this)">不记得</div></div></div>
+        <div class="hc"><span class="hc-ico">✂️</span><div class="hc-info"><div class="hc-name">美容 / 洗澡</div><div class="hc-sub">建议每1-2个月一次</div></div><div class="hc-right"><input type="date" class="hc-date" id="hc4"><div class="hc-skip" onclick="toggleHcSkip('hc4',this)">不记得</div></div></div>
+        <div class="hc"><span class="hc-ico">💊</span><div class="hc-info"><div class="hc-name">年度疫苗</div><div class="hc-sub">建议每年接种</div></div><div class="hc-right"><input type="date" class="hc-date" id="hc5"><div class="hc-skip" onclick="toggleHcSkip('hc5',this)">不记得</div></div></div>
       </div>
       <div style="background:var(--pl);border-radius:14px;padding:12px 14px;font-size:13px;color:var(--p);line-height:1.6;margin-bottom:16px">
         📅 系统将根据以上信息，在合适时间提前提醒你，无需再手动追踪
@@ -460,7 +514,7 @@ textarea.ifl{resize:none;line-height:1.6}
   <!-- 关怀弹窗 -->
   <div class="care-bg" id="careBg" onclick="closeCare(true)">
     <div class="care-sheet" onclick="event.stopPropagation()">
-      <div class="care-dog">🐶</div>
+      <div class="care-dog" id="careEmoji">🐶</div>
       <div class="care-title" id="careTitle">最近还好吗？</div>
       <div class="care-msg" id="careMsg"></div>
       <div class="care-btns">
@@ -480,6 +534,189 @@ textarea.ifl{resize:none;line-height:1.6}
 // ── 工具函数 ──
 const $=id=>document.getElementById(id);
 const now=()=>{const d=new Date();return d.getHours()+':'+String(d.getMinutes()).padStart(2,'0')};
+
+// ══════════════════════════════════════
+// 配置（部署后填入真实值）
+// ══════════════════════════════════════
+const MMY_CONFIG={
+  API_BASE:'',         // Vercel部署URL，如 'https://maomaoy.vercel.app'
+  SUPABASE_URL:'',     // Supabase项目URL，如 'https://xxx.supabase.co'
+  SUPABASE_ANON_KEY:'' // Supabase anon key，如 'eyJhbG...'
+};
+const isBackendReady=()=>!!(MMY_CONFIG.API_BASE&&MMY_CONFIG.SUPABASE_URL&&MMY_CONFIG.SUPABASE_ANON_KEY);
+
+const PET_META = {
+  cat: {
+    emoji:'🐱', label:'猫',
+    ageLabels:['幼猫','成年猫','老年猫'],
+    sizes:['小型猫（4kg以下）','中型猫（4-6kg）','大型猫（6kg以上）'],
+    dietPlaceholder:'例：皇家室内猫粮',
+    healthTip:'老年猫建议每半年一次',
+    careEmoji:'🐱'
+  },
+  dog: {
+    emoji:'🐕', label:'狗',
+    ageLabels:['幼犬','成年犬','老年犬'],
+    sizes:['小型犬（10kg以下）','中型犬（10-25kg）','大型犬（25kg以上）'],
+    dietPlaceholder:'例：皇家小型犬粮',
+    healthTip:'老年犬建议每半年一次',
+    careEmoji:'🐶'
+  }
+};
+function getAgeLabel(p){
+  const m=PET_META[p.type]||PET_META.dog;
+  if(p.age>=8)return m.ageLabels[2];
+  if(p.age>=3)return m.ageLabels[1];
+  return m.ageLabels[0];
+}
+function getMeta(p){ return PET_META[p.type]||PET_META.dog; }
+
+let sbClient=null,currentUser=null,isGuest=false,chatHistory=[];
+
+// ── Supabase 初始化 ──
+function initSB(){
+  if(!MMY_CONFIG.SUPABASE_URL||!MMY_CONFIG.SUPABASE_ANON_KEY)return false;
+  try{sbClient=window.supabase.createClient(MMY_CONFIG.SUPABASE_URL,MMY_CONFIG.SUPABASE_ANON_KEY);return true}
+  catch(e){console.warn('Supabase init failed:',e);return false}
+}
+
+// ── 认证 ──
+let authMode='login';
+function toggleAuth(){
+  authMode=authMode==='login'?'register':'login';
+  $('authTitle').textContent=authMode==='login'?'登录':'注册';
+  $('authBtn').textContent=authMode==='login'?'登录':'注册';
+  $('authToggle').textContent=authMode==='login'?'还没有账号？注册一个':'已有账号？登录';
+  $('authErr').textContent='';$('authErr').style.color='';
+}
+async function doAuth(){
+  const email=$('authEmail').value.trim(),pwd=$('authPwd').value;
+  if(!email||!pwd){$('authErr').textContent='请填写邮箱和密码';return}
+  if(pwd.length<6){$('authErr').textContent='密码至少6位';return}
+  $('authBtn').disabled=true;
+  $('authBtn').textContent=authMode==='login'?'登录中...':'注册中...';
+  $('authErr').textContent='';$('authErr').style.color='';
+  try{
+    const r=authMode==='login'
+      ?await sbClient.auth.signInWithPassword({email,password:pwd})
+      :await sbClient.auth.signUp({email,password:pwd});
+    if(r.error){$('authErr').textContent=r.error.message;return}
+    currentUser=r.data.user;
+    if(authMode==='register'&&!r.data.session){
+      $('authErr').style.color='var(--g)';
+      $('authErr').textContent='注册成功！请查看邮箱验证后登录';
+      return;
+    }
+    await onLoginSuccess();
+  }catch(e){$('authErr').textContent='网络错误，请重试'}
+  finally{$('authBtn').disabled=false;$('authBtn').textContent=authMode==='login'?'登录':'注册'}
+}
+function skipLogin(){isGuest=true;onLoginSuccess()}
+async function onLoginSuccess(){
+  document.querySelectorAll('.sc').forEach(s=>s.classList.remove('active','out'));
+  if(!isGuest&&sbClient){
+    try{
+      const r=await apiCall('/api/pet','GET');
+      if(r&&r.pet){
+        const sp=r.pet;
+        if(sp.calendar&&typeof sp.calendar==='string')sp.calendar=JSON.parse(sp.calendar);
+        sp.hasReport=sp.has_report||false;
+        localStorage.setItem('mmy_pet',JSON.stringify(sp));
+      }
+    }catch(e){console.warn('Load pet from server failed:',e)}
+  }
+  const pet=getPet();
+  if(pet){
+    screenStack=['s4'];
+    $('s4').classList.add('active');
+    history.replaceState({screen:'s4'},'');
+    onEnterS4();
+  }else{
+    screenStack=['s0'];
+    $('s0').classList.add('active');
+    history.replaceState({screen:'s0'},'');
+  }
+}
+async function doLogout(){
+  if(!confirm('确定要退出登录吗？'))return;
+  if(sbClient)await sbClient.auth.signOut();
+  currentUser=null;isGuest=false;
+  clearPet();
+  document.querySelectorAll('.sc').forEach(s=>s.classList.remove('active','out'));
+  screenStack=['sLogin'];
+  $('sLogin').classList.add('active');
+  history.replaceState({screen:'sLogin'},'');
+}
+
+// ── API 调用 ──
+async function apiCall(endpoint,method,body){
+  if(!MMY_CONFIG.API_BASE||isGuest)return null;
+  try{
+    const sess=await sbClient?.auth.getSession();
+    const tk=sess?.data?.session?.access_token;
+    if(!tk)return null;
+    const r=await fetch(MMY_CONFIG.API_BASE+endpoint,{
+      method,
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+tk},
+      body:body?JSON.stringify(body):undefined
+    });
+    if(!r.ok)throw new Error('API '+r.status);
+    return await r.json();
+  }catch(e){console.warn('API error:',e);return null}
+}
+
+// ── 实时AI聊天 ──
+function enableChatInput(screenId){
+  const scr=$(screenId);
+  const inp=scr.querySelector('.cinput');
+  const btn=scr.querySelector('.csend');
+  inp.removeAttribute('readonly');
+  inp.placeholder='输入你的问题...';
+  const send=async()=>{
+    const text=inp.value.trim();
+    if(!text||chatRunning)return;
+    inp.value='';chatRunning=true;
+    await addUserMsg(text);
+    chatHistory.push({role:'user',content:text});
+    const box=getBox();
+    const tr=document.createElement('div');tr.className='typrow';
+    tr.innerHTML=`<div class="mava">${activeChatBox==='cb2'?'🌟':'🐾'}</div><div class="typbbl"><span></span><span></span><span></span></div>`;
+    box.appendChild(tr);scrollChat();
+    const p=getPet();
+    const result=await apiCall('/api/chat','POST',{
+      messages:chatHistory,
+      petProfile:p?{name:p.name,type:p.type,emoji:p.emoji,age:p.age,breed:p.breed,gender:p.gender,size:p.size,neuter:p.neuter,history:p.history,diet:p.diet}:null,
+      chatType:activeChatBox==='cb2'?'mood':'medical'
+    });
+    tr.remove();
+    if(result&&result.reply){
+      chatHistory.push({role:'assistant',content:result.reply});
+      const r=document.createElement('div');r.className='mrow';
+      r.innerHTML=`<div class="mava">${activeChatBox==='cb2'?'🌟':'🐾'}</div><div class="bbl">${result.reply}</div>`;
+      box.appendChild(r);scrollChat();
+    }else{
+      const r=document.createElement('div');r.className='mrow';
+      r.innerHTML=`<div class="mava">${activeChatBox==='cb2'?'🌟':'🐾'}</div><div class="bbl">抱歉，网络出了点问题，请稍后再试</div>`;
+      box.appendChild(r);scrollChat();
+    }
+    chatRunning=false;
+  };
+  btn.onclick=send;
+  inp.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.isComposing){e.preventDefault();send()}});
+}
+async function showAIGreeting(){
+  const p=getPet();if(!p){chatRunning=false;return}
+  const pronoun=p.gender==='母 ♀'?'她':'他';
+  const ageLabel=getAgeLabel(p);
+  await addAIMsg(`你好！我已经为 <strong>${p.name}</strong> 建立了专属档案 🐾<br><br>${p.name}今年 <span class="hl">${p.age}岁</span>，${p.breed||getMeta(p).label}，${ageLabel}。<br><br>有什么想问我的？随时输入消息 👇`);
+  chatRunning=false;
+}
+async function showMoodGreeting(){
+  const p=getPet();if(!p){chatRunning=false;return}
+  const pronoun=p.gender==='母 ♀'?'她':'他';
+  await addAIMsg(`早上好 ☀️ 来做${p.name}的今日心情检测吧！<br><br>告诉我${pronoun}现在的状态，或者描述一下${pronoun}的表现，我来帮你分析 🐾`);
+  chatRunning=false;
+}
 
 // ── 图片压缩 ──
 function compressImage(file, maxKB=200){
@@ -513,19 +750,160 @@ function compressImage(file, maxKB=200){
   });
 }
 
-// ── localStorage ──
-function getPet(){
-  try{return JSON.parse(localStorage.getItem('mmy_pet'))||null}catch(e){return null}
+// ── localStorage（多宠物） ──
+let editingExisting=false; // 标记是否在编辑已有宠物
+
+function getAllPets(){
+  try{
+    // 兼容旧数据迁移
+    const old=localStorage.getItem('mmy_pet');
+    if(old){
+      const p=JSON.parse(old);
+      localStorage.setItem('mmy_pets',JSON.stringify([p]));
+      localStorage.setItem('mmy_active','0');
+      localStorage.removeItem('mmy_pet');
+      return [p];
+    }
+    return JSON.parse(localStorage.getItem('mmy_pets'))||[];
+  }catch(e){return []}
 }
-function savePet(data){localStorage.setItem('mmy_pet',JSON.stringify(data))}
-function clearPet(){localStorage.removeItem('mmy_pet')}
+function getActiveIndex(){
+  return parseInt(localStorage.getItem('mmy_active')||'0',10);
+}
+function getPet(){
+  const pets=getAllPets();
+  const idx=getActiveIndex();
+  return pets[idx]||pets[0]||null;
+}
+function savePet(data){
+  const pets=getAllPets();
+  const idx=getActiveIndex();
+  if(editingExisting && idx < pets.length){
+    pets[idx]=data;
+  } else if(idx < pets.length && pets.length > 0 && !editingExisting){
+    // 新增宠物
+    pets.push(data);
+    localStorage.setItem('mmy_active',String(pets.length-1));
+  } else {
+    // 首次建档
+    pets.push(data);
+    localStorage.setItem('mmy_active',String(pets.length-1));
+  }
+  editingExisting=false;
+  localStorage.setItem('mmy_pets',JSON.stringify(pets));
+  if(!isGuest&&isBackendReady()){const{photo,...d}=data;apiCall('/api/pet','POST',d)}
+}
+function switchPet(idx){
+  const pets=getAllPets();
+  if(idx<0||idx>=pets.length)return;
+  localStorage.setItem('mmy_active',String(idx));
+  // 重置聊天状态
+  chatS5Done=false;chatS6Done=false;
+  $('cb').innerHTML='<div class="tlbl"></div>';
+  $('cb2').innerHTML='<div class="tlbl"></div>';
+  onEnterS4();
+}
+function addNewPet(){
+  editingExisting=false;
+  onboardPhoto=null;
+  $('fName').value='';$('fAge').value='';$('fBirthday').value='';$('fBreed').value='';
+  $('fHistory').value='';$('fDiet').value='';
+  $('rec').classList.remove('show');
+  $('pPrev').classList.remove('show');$('pPrev').innerHTML='';
+  $('pz').classList.remove('up');$('fbtn').textContent='完成建档';
+  // 默认选猫
+  document.querySelectorAll('.pet-big').forEach(c=>c.classList.remove('s'));
+  document.querySelector('.pet-big[data-type="cat"]').classList.add('s');
+  goTo('s1');
+}
+function editCurrentPet(){
+  const p=getPet();if(!p)return;
+  editingExisting=true;
+  onboardPhoto=p.photo||null;
+  // 填充表单
+  $('fName').value=p.name||'';
+  $('fAge').value=p.age||'';
+  $('fBirthday').value=p.birthday||'';
+  $('fBreed').value=p.breed||'';
+  $('fHistory').value=p.history==='无特殊病史'?'':p.history;
+  $('fDiet').value=p.diet==='常规饮食'?'':p.diet;
+  // 选择宠物类型
+  document.querySelectorAll('.pet-big').forEach(c=>c.classList.remove('s'));
+  const sel=document.querySelector(`.pet-big[data-type="${p.type}"]`);
+  if(sel)sel.classList.add('s');
+  // 性别
+  document.querySelectorAll('#fGender .tgo').forEach(b=>{b.classList.remove('s');if(b.dataset.val===p.gender)b.classList.add('s')});
+  // 绝育
+  document.querySelectorAll('#fNeuter .tgo').forEach(b=>{b.classList.remove('s');if(b.dataset.val===p.neuter)b.classList.add('s')});
+  // 健康日历
+  if(p.calendar){
+    const cal=p.calendar;
+    const mapping={hc1:'deworm',hc2:'dental',hc3:'checkup',hc4:'grooming',hc5:'vaccine'};
+    Object.entries(mapping).forEach(([id,key])=>{
+      const v=cal[key];
+      if(v && /^\d{4}-\d{2}/.test(v)){
+        $(id).value=v;$(id).disabled=false;
+      }else if(!v){
+        $(id).value='';$(id).disabled=true;
+        // find skip button
+        const skipEl=$(id).parentElement.querySelector('.hc-skip');
+        if(skipEl){skipEl.textContent='已跳过';skipEl.classList.add('skipped')}
+      }else{
+        $(id).value='';$(id).disabled=false;
+      }
+    });
+  }
+  // 照片预览
+  if(p.photo){
+    $('pPrev').innerHTML=`<img src="${p.photo}" alt="pet photo">`;
+    $('pPrev').classList.add('show');$('pz').classList.add('up');
+    $('fbtn').textContent='完成建档 ✓';
+  }else{
+    $('pPrev').classList.remove('show');$('pPrev').innerHTML='';
+    $('pz').classList.remove('up');$('fbtn').textContent='完成建档';
+  }
+  goTo('s1');
+}
+function deletePet(idx){
+  const pets=getAllPets();
+  if(pets.length<=1){
+    if(confirm('删除后将清空所有档案，确定吗？')){
+      clearPet();
+      screenStack=['s0'];
+      document.querySelectorAll('.sc').forEach(s=>s.classList.remove('active','out'));
+      $('s0').classList.add('active');
+      history.replaceState({screen:'s0'},'');
+    }
+    return;
+  }
+  if(!confirm(`确定删除 ${pets[idx].name} 的档案吗？`))return;
+  pets.splice(idx,1);
+  let active=getActiveIndex();
+  if(active>=pets.length)active=pets.length-1;
+  localStorage.setItem('mmy_pets',JSON.stringify(pets));
+  localStorage.setItem('mmy_active',String(active));
+  onEnterS4();
+}
+function clearPet(){localStorage.removeItem('mmy_pet');localStorage.removeItem('mmy_pets');localStorage.removeItem('mmy_active');localStorage.removeItem('mmy_care_shown');if(!isGuest&&isBackendReady())apiCall('/api/pet','DELETE')}
+
+// ── 健康日历跳过 ──
+function toggleHcSkip(id,el){
+  const inp=$(id);
+  if(inp.disabled){
+    inp.disabled=false;inp.value='';
+    el.textContent='不记得';el.classList.remove('skipped');
+  }else{
+    inp.disabled=true;inp.value='';
+    el.textContent='已跳过';el.classList.add('skipped');
+  }
+}
 
 // ── 模板引擎 ──
 function tpl(str){
   const p=getPet();
   if(!p) return str;
   const petEmoji = p.emoji || '🐾';
-  const ageLabel = p.age >= 8 ? '老年犬' : (p.age >= 3 ? '成年犬' : '幼犬');
+  const ageLabel = getAgeLabel(p);
   return str
     .replace(/\{name\}/g, p.name||'宝贝')
     .replace(/\{age\}/g, p.age||'?')
@@ -561,6 +939,16 @@ function goTo(id){
   if(sb) sb.scrollTop=0;
 
   // triggers
+  if(id==='s2'){
+    const sel=document.querySelector('.pet-big.s');
+    if(sel) updateSizeOptions(sel.dataset.type);
+  }
+  if(id==='s3b'){
+    const sel=document.querySelector('.pet-big.s');
+    const t=sel?sel.dataset.type:'cat';
+    const m=PET_META[t]||PET_META.cat;
+    $('hcCheckupTip').textContent=m.healthTip;
+  }
   if(id==='s4') onEnterS4();
   if(id==='s3c') onEnterS3c();
 }
@@ -609,8 +997,14 @@ window.addEventListener('popstate',(e)=>{
 
 // ── 辅助UI ──
 function selP(el){
-  document.querySelectorAll('.pc').forEach(c=>c.classList.remove('s'));
+  document.querySelectorAll('.pet-big').forEach(c=>c.classList.remove('s'));
   el.classList.add('s');
+  updateSizeOptions(el.dataset.type);
+}
+function updateSizeOptions(type){
+  const m=PET_META[type]||PET_META.dog;
+  $('fSize').innerHTML=m.sizes.map((s,i)=>`<option value="${s}"${i===0?' selected':''}>${s}</option>`).join('');
+  $('fDiet').placeholder=m.dietPlaceholder;
 }
 function tog(el){
   el.closest('.tg').querySelectorAll('.tgo').forEach(b=>b.classList.remove('s'));
@@ -656,8 +1050,8 @@ function validateS2(){
 
 // ── S3c: 进入时更新文案 ──
 function onEnterS3c(){
-  const sel=document.querySelector('.pc.s');
-  const emoji=sel?sel.dataset.emoji:'🐾';
+  const sel=document.querySelector('.pet-big.s');
+  const emoji=sel?sel.dataset.emoji:'🐱';
   $('pzPlaceholder').textContent=emoji;
   const name=$('fName').value.trim()||'宝贝';
   $('s3cTitle').textContent=`给${name}来一张正面照 📸`;
@@ -698,9 +1092,9 @@ $('fileReport').addEventListener('change',function(){
 
 // ── 收集建档数据 ──
 function collectFormData(){
-  const sel=document.querySelector('.pc.s');
-  const petType=sel?sel.querySelector('.pn').textContent:'狗';
-  const emoji=sel?sel.dataset.emoji:'🐕';
+  const sel=document.querySelector('.pet-big.s');
+  const petType=sel?sel.dataset.type:'cat';
+  const emoji=sel?sel.dataset.emoji:'🐱';
   const gender=document.querySelector('#fGender .tgo.s');
   const neuter=document.querySelector('#fNeuter .tgo.s');
 
@@ -709,20 +1103,21 @@ function collectFormData(){
     emoji: emoji,
     name: $('fName').value.trim()||'宝贝',
     age: parseFloat($('fAge').value)||1,
+    birthday: $('fBirthday').value||null,
     size: $('fSize').value,
     gender: gender?gender.dataset.val:'未知',
-    breed: $('fBreed').value.trim()||'混血',
+    breed: $('fBreed').value.trim()||'',
     neuter: neuter?neuter.dataset.val:'未知',
     history: $('fHistory').value.trim()||'无特殊病史',
     diet: $('fDiet').value.trim()||'常规饮食',
     photo: onboardPhoto||null,
     hasReport: $('rec').classList.contains('show'),
     calendar: {
-      deworm: $('hc1').value,
-      dental: $('hc2').value,
-      checkup: $('hc3').value,
-      grooming: $('hc4').value,
-      vaccine: $('hc5').value
+      deworm: $('hc1').disabled?null:($('hc1').value||null),
+      dental: $('hc2').disabled?null:($('hc2').value||null),
+      checkup: $('hc3').disabled?null:($('hc3').value||null),
+      grooming: $('hc4').disabled?null:($('hc4').value||null),
+      vaccine: $('hc5').disabled?null:($('hc5').value||null)
     },
     createdAt: new Date().toISOString()
   };
@@ -738,13 +1133,22 @@ function finishOnboard(){
 function onEnterS4(){
   const p=getPet();
   if(!p) return;
-  const ageLabel=p.age>=8?'老年犬':(p.age>=3?'成年犬':'幼犬');
+  const ageLabel=getAgeLabel(p);
   const photoHTML=p.photo?`<img src="${p.photo}" alt="${p.name}">`:(p.emoji||'🐾');
 
   // 健康提醒数据
   const reminders=buildReminders(p);
 
+  const pets=getAllPets();
+  const active=getActiveIndex();
+  const petTabsHTML=pets.length>0?`
+    <div class="pet-tabs">
+      ${pets.map((pet,i)=>`<div class="pet-tab ${i===active?'active':''}" onclick="switchPet(${i})">${pet.emoji} ${pet.name}</div>`).join('')}
+      <div class="pet-tab pet-tab-add" onclick="addNewPet()">＋ 添加宠物</div>
+    </div>`:'';
+
   $('s4body').innerHTML=`
+    ${petTabsHTML}
     <div class="succ-icon">✅</div>
     <div class="succ-t">建档成功！</div>
     <div class="succ-s">${p.name}的专属档案已建立<br>AI 已记住${p.gender==='母 ♀'?'她':'他'}的全部信息</div>
@@ -752,12 +1156,13 @@ function onEnterS4(){
     <div class="pcard">
       <div class="ph-hdr">
         <div class="p-ava">${photoHTML}</div>
-        <div><div class="p-name">${p.name}</div><div class="p-breed">${p.breed} · ${p.size}</div></div>
+        <div><div class="p-name">${p.name}</div><div class="p-breed">${p.breed?p.breed+' · ':''}${p.size}</div></div>
       </div>
       <div class="ptgs">
         <span class="ptg a">${p.age}岁</span>
         <span class="ptg ge">${p.gender}</span>
         <span class="ptg sr">${ageLabel}</span>
+        ${p.birthday?`<span class="ptg" style="background:#FFF8E1;color:#D97706">${p.birthday}</span>`:''}
       </div>
       <div class="pdiv"></div>
       <div class="prow"><span class="pl2">健康状况</span><span class="pv2">${p.history}</span></div>
@@ -797,7 +1202,9 @@ function onEnterS4(){
 
     <button class="pbtn" onclick="startChat()" style="margin-bottom:10px">找毛毛医问问看</button>
     <div style="font-size:12px;color:var(--t3);text-align:center">毛毛医已读取${p.name}的专属档案</div>
-    <button class="reset-btn" onclick="resetProfile()">重新建档</button>
+    <button class="reset-btn" onclick="editCurrentPet()">编辑档案</button>
+    ${pets.length>1?`<button class="reset-btn" style="color:#e53e3e;border-color:#fed7d7;margin-top:0" onclick="deletePet(${active})">删除${p.name}的档案</button>`:''}
+    ${!isGuest&&currentUser?`<div class="user-badge">${currentUser.email}</div><button class="logout-btn" onclick="doLogout()">退出登录</button>`:''}
   `;
 
   // 关怀弹窗
@@ -825,34 +1232,45 @@ function buildReminders(p){
 }
 
 function calcUrgency(val, cycle){
-  // simple heuristic based on the selected value
-  if(!val) return {color:'var(--bd)',next:'未设置',label:'—',cls:''};
-  if(val==='本月'||val==='2周前'){
-    return {color:'var(--g)',next:'下次还早',label:'✓ 正常',cls:'rb-g'};
+  if(!val) return {color:'var(--bd)',next:'未设置',label:'跳过',cls:''};
+  // 如果是旧格式字符串（兼容），转换为估算天数
+  const cycleDays={'1-3个月':60,'6-12个月':270,'半年':180,'1-2个月':45,'12个月':365};
+  const maxDays=cycleDays[cycle]||180;
+  let daysAgo=0;
+  if(/^\d{4}-\d{2}/.test(val)){
+    // 真实日期格式 YYYY-MM-DD 或 YYYY-MM
+    const d=new Date(val);
+    daysAgo=Math.floor((Date.now()-d.getTime())/(1000*60*60*24));
+  }else{
+    // 旧格式兼容
+    const map={'本月':15,'2周前':14,'3周前':21,'1个月前':30,'2个月前':60,'3个月前':90,'4个月前':120,'半年前':180,'8个月前':240,'1年前':365};
+    daysAgo=map[val]||90;
   }
-  if(val==='1个月前'||val==='3周前'||val==='3个月前'){
-    return {color:'var(--g)',next:'下次：约1个月后',label:'✓ 正常',cls:'rb-g'};
+  const ratio=daysAgo/maxDays;
+  const daysLeft=maxDays-daysAgo;
+  if(ratio<0.5){
+    return {color:'var(--g)',next:`${daysLeft>30?Math.round(daysLeft/30)+'个月后':daysLeft+'天后'}到期`,label:'✓ 正常',cls:'rb-g'};
   }
-  if(val==='2个月前'||val==='半年前'){
-    return {color:'#FFC107',next:'快到期了',label:'⚠ 留意',cls:'rb-y'};
+  if(ratio<0.85){
+    return {color:'#FFC107',next:`约${daysLeft>30?Math.round(daysLeft/30)+'个月':daysLeft+'天'}后到期`,label:'⚠ 留意',cls:'rb-y'};
   }
-  if(val==='4个月前'||val==='8个月前'){
-    if(cycle==='半年'){
-      return {color:'var(--p)',next:'建议尽快安排',label:'⚡ 即将到期',cls:'rb-r'};
-    }
-    return {color:'#FFC107',next:'建议近期安排',label:'⚠ 留意',cls:'rb-y'};
+  if(daysLeft>0){
+    return {color:'var(--p)',next:`${daysLeft}天后到期`,label:'⚡ 即将到期',cls:'rb-r'};
   }
-  if(val==='1年前'){
-    return {color:'var(--p)',next:'已超期，请尽快安排',label:'⚡ 即将到期',cls:'rb-r'};
-  }
-  return {color:'var(--g)',next:'下次提醒中',label:'✓ 正常',cls:'rb-g'};
+  return {color:'var(--p)',next:`已超期${Math.abs(daysLeft)}天`,label:'⚡ 已超期',cls:'rb-r'};
 }
 
 // ── 关怀弹窗 ──
 function showCare(){
   const p=getPet();
   if(!p) return;
+  // 第一次建档不弹关怀，只在后续进入S4时弹出
+  if(!localStorage.getItem('mmy_care_shown')){
+    localStorage.setItem('mmy_care_shown','1');
+    return;
+  }
   const pronoun=p.gender==='母 ♀'?'她':'他';
+  $('careEmoji').textContent=getMeta(p).careEmoji;
   $('careTitle').textContent=`${p.name}，最近还好吗？`;
   $('careMsg').innerHTML=`
     上次你问过${p.name}<strong>不吃东西</strong>的问题，<br>
@@ -874,9 +1292,13 @@ function resetProfile(){
   // reset forms
   $('fName').value='';
   $('fAge').value='';
+  $('fBirthday').value='';
   $('fBreed').value='';
   $('fHistory').value='';
   $('fDiet').value='';
+  // reset health calendar date inputs
+  ['hc1','hc2','hc3','hc4','hc5'].forEach(id=>{$(id).value='';$(id).disabled=false});
+  document.querySelectorAll('.hc-skip').forEach(el=>{el.textContent='不记得';el.classList.remove('skipped')});
   $('rec').classList.remove('show');
   $('pPrev').classList.remove('show');
   $('pPrev').innerHTML='';
@@ -1066,14 +1488,20 @@ function startChat(){
   if(!chatS5Done){
     chatS5Done=true;
     chatRunning=true;
-    setTimeout(()=>runMedicalChat(),400);
+    if(isBackendReady()&&!isGuest){
+      chatHistory=[];
+      enableChatInput('s5');
+      setTimeout(()=>showAIGreeting(),400);
+    }else{
+      setTimeout(()=>runMedicalChat(),400);
+    }
   }
 }
 
 async function runMedicalChat(){
   const p=getPet();
   const pronoun=p&&p.gender==='母 ♀'?'她':'他';
-  const ageLabel=p?(p.age>=8?'老年犬':(p.age>=3?'成年犬':'幼犬')):'';
+  const ageLabel=p?getAgeLabel(p):'';
 
   const script=[
     // 第1轮：AI问候
@@ -1163,7 +1591,13 @@ function goToMood(){
   if(!chatS6Done){
     chatS6Done=true;
     chatRunning=true;
-    setTimeout(()=>runMoodChat(),400);
+    if(isBackendReady()&&!isGuest){
+      chatHistory=[];
+      enableChatInput('s6');
+      setTimeout(()=>showMoodGreeting(),400);
+    }else{
+      setTimeout(()=>runMoodChat(),400);
+    }
   }
 }
 
@@ -1224,18 +1658,40 @@ async function runMoodChat(){
 // 启动逻辑
 // ══════════════════════════════════════
 
-(function init(){
-  // check localStorage for existing profile
+function fallbackInit(){
   const pet=getPet();
   if(pet){
-    // 已建档用户 → 直接进入S4
     screenStack=['s4'];
     document.querySelectorAll('.sc').forEach(s=>s.classList.remove('active'));
     $('s4').classList.add('active');
     history.replaceState({screen:'s4'},'');
     onEnterS4();
-  } else {
+  }else{
+    screenStack=['s0'];
+    $('s0').classList.add('active');
     history.replaceState({screen:'s0'},'');
+  }
+}
+
+(function init(){
+  const configured=initSB();
+  if(configured){
+    sbClient.auth.getSession().then(({data:{session}})=>{
+      if(session){
+        currentUser=session.user;
+        onLoginSuccess();
+      }else{
+        screenStack=['sLogin'];
+        $('sLogin').classList.add('active');
+        history.replaceState({screen:'sLogin'},'');
+      }
+    }).catch(()=>{
+      isGuest=true;
+      fallbackInit();
+    });
+  }else{
+    isGuest=true;
+    fallbackInit();
   }
 })();
 </script>
